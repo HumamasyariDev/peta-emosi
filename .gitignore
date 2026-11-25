@@ -1,0 +1,15 @@
+# Godot 4 local cache & editor artifacts
+.godot/
+*.translation
+
+# Build outputs, release zips, and local server/deploy state
+build/
+export_templates/
+.vercel/
+
+# OS & temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*~

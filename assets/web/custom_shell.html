@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="screen-orientation" content="landscape">
+		<title>$GODOT_PROJECT_NAME</title>
+		<style>
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: #fff8ea;
+	background-color: #142c28;
+	overflow: hidden;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	font-family: 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+#canvas {
+	display: block;
+	width: 100vw;
+	height: 100dvh;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+/* Full-Bleed Storybook Adventure Loading Stage */
+#status {
+	position: fixed;
+	inset: 0;
+	z-index: 99;
+	background: radial-gradient(circle at 78% 36%, #245249 0%, #16332e 52%, #0f2320 100%);
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	padding: clamp(20px, 4vw, 48px) clamp(24px, 5vw, 64px);
+	overflow: hidden;
+	transition: opacity 0.4s ease;
+}
+
+#status.fade-out {
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Illustrated Cartographic Compass Backdrop Art (Right Side) */
+.stage-art {
+	position: absolute;
+	right: -4vw;
+	top: 50%;
+	transform: translateY(-52%);
+	width: min(56vw, 560px);
+	height: auto;
+	opacity: 0.22;
+	pointer-events: none;
+}
+
+.compass-ring {
+	transform-origin: 200px 200px;
+	animation: slowSpin 42s linear infinite;
+}
+
+@keyframes slowSpin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.stage-top {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.edition-mark {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: #d6c5a3;
+}
+
+.stage-hero {
+	position: relative;
+	z-index: 2;
+	align-self: center;
+	max-width: 620px;
+}
+
+.game-title {
+	margin: 0;
+	font-size: clamp(2.4rem, 6.2vw, 4.4rem);
+	font-weight: 900;
+	line-height: 1.02;
+	letter-spacing: 0.01em;
+	color: #ffd666;
+	text-shadow: 0 5px 0 #3b1f0e, 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.game-subtitle {
+	margin: 0.55rem 0 0 0;
+	font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+	font-weight: 700;
+	color: #fff8ea;
+}
+
+.game-lead {
+	margin: 0.9rem 0 0 0;
+	font-size: clamp(0.92rem, 1.5vw, 1.05rem);
+	line-height: 1.55;
+	color: #d7e4df;
+	max-width: 48ch;
+}
+
+.stage-footer {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.footer-meta {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.tip-text {
+	font-size: 0.9rem;
+	color: #c9dad4;
+	margin: 0;
+}
+
+.tip-text strong {
+	color: #ffd666;
+	font-weight: 800;
+}
+
+.status-readout {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	margin-left: auto;
+}
+
+.status-phase {
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: #d6c5a3;
+}
+
+.status-pct {
+	font-size: 1.35rem;
+	font-weight: 900;
+	color: #ffd666;
+	font-variant-numeric: tabular-nums;
+	min-width: 3.4ch;
+	text-align: right;
+}
+
+/* Tactile Adventure Trail Progress Rail */
+.trail-rail {
+	position: relative;
+	width: 100%;
+	height: 10px;
+	background: rgba(255, 248, 234, 0.14);
+	border: 1px solid rgba(255, 214, 102, 0.32);
+	border-radius: 3px;
+	overflow: visible;
+}
+
+.trail-fill {
+	position: relative;
+	width: 6%;
+	height: 100%;
+	background: #e59a16;
+	border-radius: 2px;
+	transition: width 0.2s ease-out;
+}
+
+.trail-pin {
+	position: absolute;
+	right: -7px;
+	top: 50%;
+	transform: translateY(-50%) rotate(45deg);
+	width: 14px;
+	height: 14px;
+	background: #ffd666;
+	border: 2px solid #3b1f0e;
+}
+
+#status-notice {
+	display: none;
+	margin-top: 8px;
+	background-color: #a82438;
+	border: 2px solid #ffd666;
+	border-radius: 10px;
+	color: #fff8ea;
+	line-height: 1.45;
+	padding: 0.8rem 1rem;
+	font-size: 0.9rem;
+}
+
+/* Mandatory Landscape Overlay for Android / Mobile Portrait */
+#rotate-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	background: radial-gradient(circle at 50% 35%, #245249 0%, #142c28 100%);
+	display: none;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 1.5rem;
+	text-align: center;
+}
+
+#rotate-overlay.active {
+	display: flex;
+}
+
+.rotate-card {
+	background: #fff8ea;
+	border: 3px solid #5c341a;
+	border-bottom-width: 7px;
+	border-radius: 20px;
+	padding: 1.8rem 1.6rem;
+	max-width: 340px;
+	width: 92%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.phone-icon {
+	width: 68px;
+	height: 68px;
+	margin-bottom: 0.9rem;
+	animation: rotatePhone 2.2s ease-in-out infinite;
+}
+
+@keyframes rotatePhone {
+	0%, 20% { transform: rotate(0deg); }
+	55%, 80% { transform: rotate(-90deg); }
+	100% { transform: rotate(0deg); }
+}
+
+.rotate-title {
+	margin: 0 0 0.45rem 0;
+	font-size: 1.28rem;
+	font-weight: 800;
+	color: #2a1a12;
+}
+
+.rotate-desc {
+	margin: 0 0 1.2rem 0;
+	font-size: 0.93rem;
+	line-height: 1.45;
+	color: #5c4030;
+}
+
+.landscape-btn {
+	appearance: none;
+	border: 2px solid #6e1322;
+	border-bottom-width: 5px;
+	background: #a82438;
+	color: #fffaf0;
+	font-weight: 800;
+	font-size: 0.95rem;
+	min-height: 44px;
+	padding: 0.72rem 1.35rem;
+	border-radius: 12px;
+	cursor: pointer;
+}
+
+.landscape-btn:active {
+	transform: translateY(2px);
+	border-bottom-width: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.compass-ring, .phone-icon {
+		animation: none;
+	}
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Browser Anda tidak mendukung elemen canvas HTML5.
+		</canvas>
+
+		<noscript>
+			Mohon aktifkan JavaScript untuk memainkan Peta Emosi.
+		</noscript>
+
+		<div id="rotate-overlay" role="dialog" aria-live="polite">
+			<div class="rotate-card">
+				<svg class="phone-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+					<rect x="18" y="6" width="28" height="52" rx="6" fill="#FFE6A7" stroke="#5C341A" stroke-width="3.5"/>
+					<rect x="22" y="13" width="20" height="34" rx="2" fill="#8FD3FE" stroke="#5C341A" stroke-width="2"/>
+					<circle cx="32" cy="52" r="2.2" fill="#5C341A"/>
+					<path d="M51 22C54 27 54 35 50 40" stroke="#A82438" stroke-width="3" stroke-linecap="round"/>
+					<path d="M48 35L49.5 41L55 39" stroke="#A82438" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+				<h2 class="rotate-title">Putar HP ke Mode Landscape</h2>
+				<p class="rotate-desc">Peta Emosi dirancang khusus dalam posisi layar mendatar agar tombol analog dan tampilan taman lebih nyaman dimainkan.</p>
+				<button id="lock-landscape-btn" class="landscape-btn" type="button">Buka Layar Penuh &amp; Landscape</button>
+			</div>
+		</div>
+
+		<main id="status" aria-live="polite">
+			<svg class="stage-art" viewBox="0 0 400 400" fill="none" aria-hidden="true">
+				<g class="compass-ring">
+					<circle cx="200" cy="200" r="176" stroke="#FFD666" stroke-width="2" stroke-dasharray="8 10"/>
+					<circle cx="200" cy="200" r="142" stroke="#FFF8EA" stroke-width="1.5"/>
+					<circle cx="200" cy="200" r="96" stroke="#FFD666" stroke-width="1.5" stroke-dasharray="4 8"/>
+				</g>
+				<path d="M200 32 L222 178 L368 200 L222 222 L200 368 L178 222 L32 200 L178 178 Z" fill="#FFD666" fill-opacity="0.28" stroke="#FFD666" stroke-width="2"/>
+				<path d="M200 72 L214 186 L328 200 L214 214 L200 328 L186 214 L72 200 L186 186 Z" fill="#FFF8EA" fill-opacity="0.18"/>
+				<circle cx="200" cy="200" r="16" fill="#142C28" stroke="#FFD666" stroke-width="3"/>
+			</svg>
+
+			<header class="stage-top">
+				<span class="edition-mark">Taman Emosi • Game Edukasi 3D</span>
+			</header>
+
+			<section class="stage-hero">
+				<h1 class="game-title">PETA EMOSI</h1>
+				<p class="game-subtitle">Petualangan Taman Emosi Bersama Nara</p>
+				<p class="game-lead">Menyusuri gerbang taman, mengenal 6 emosi dasar, dan melatih cara menenangkan diri dengan aman bersama teman.</p>
+			</section>
+
+			<footer class="stage-footer">
+				<div class="footer-meta">
+					<p id="tip-text" class="tip-text"><strong>Tips:</strong> Tekan tombol M kapan saja untuk membuka Peta Pos petualangan.</p>
+					<div class="status-readout">
+						<span id="status-text" class="status-phase">Menyiapkan Taman Emosi...</span>
+						<span id="status-pct" class="status-pct">6%</span>
+					</div>
+				</div>
+				<div class="trail-rail">
+					<div id="status-fill" class="trail-fill">
+						<span class="trail-pin" aria-hidden="true"></span>
+					</div>
+				</div>
+				<div id="status-notice"></div>
+			</footer>
+		</main>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+// Android / Mobile Landscape Orientation Guard
+(function () {
+	const overlay = document.getElementById('rotate-overlay');
+	const lockBtn = document.getElementById('lock-landscape-btn');
+
+	function isMobileDevice() {
+		const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+		const ua = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+		return coarse || ua || ('ontouchstart' in window && Math.min(window.innerWidth, window.innerHeight) <= 920);
+	}
+
+	function checkOrientation() {
+		if (!isMobileDevice()) {
+			overlay.classList.remove('active');
+			return;
+		}
+		const isPortrait = window.innerHeight > window.innerWidth;
+		overlay.classList.toggle('active', isPortrait);
+	}
+
+	async function enterLandscapeFullscreen() {
+		try {
+			const el = document.documentElement;
+			if (el.requestFullscreen) {
+				await el.requestFullscreen();
+			} else if (el.webkitRequestFullscreen) {
+				await el.webkitRequestFullscreen();
+			}
+		} catch (_) {}
+		try {
+			if (screen.orientation && screen.orientation.lock) {
+				await screen.orientation.lock('landscape');
+			}
+		} catch (_) {}
+		checkOrientation();
+	}
+
+	lockBtn.addEventListener('click', enterLandscapeFullscreen);
+	window.addEventListener('resize', checkOrientation);
+	window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 120));
+	checkOrientation();
+
+	window.petaEmosiIsTouch = isMobileDevice;
+}());
+
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusFill = document.getElementById('status-fill');
+	const statusText = document.getElementById('status-text');
+	const statusPct = document.getElementById('status-pct');
+	const statusNotice = document.getElementById('status-notice');
+	const tipEl = document.getElementById('tip-text');
+
+	const tips = [
+		'<strong>Tips:</strong> Tekan tombol M kapan saja untuk membuka Peta Pos petualangan.',
+		'<strong>Tips:</strong> Gunakan E atau tombol Aksi saat mendekati papan, teman, atau benda di taman.',
+		'<strong>Tips:</strong> Di HP, ketuk tombol Analog di kanan atas untuk menyalakan joystick 360 derajat.'
+	];
+	let tipIdx = 0;
+	const tipTimer = setInterval(() => {
+		tipIdx = (tipIdx + 1) % tips.length;
+		if (tipEl) tipEl.innerHTML = tips[tipIdx];
+	}, 3200);
+
+	let initializing = true;
+
+	function hideStatus() {
+		if (!initializing) return;
+		initializing = false;
+		clearInterval(tipTimer);
+		statusFill.style.width = '100%';
+		statusPct.textContent = '100%';
+		statusText.textContent = 'Gerbang Taman Terbuka!';
+		statusOverlay.classList.add('fade-out');
+		setTimeout(() => {
+			if (statusOverlay.parentNode) statusOverlay.remove();
+		}, 420);
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		clearInterval(tipTimer);
+		statusNotice.style.display = 'block';
+		statusNotice.textContent = (err instanceof Error) ? err.message : String(err || 'Terjadi kesalahan saat memuat game.');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		displayFailureNotice('Fitur browser yang diperlukan belum aktif: ' + missing.join(', '));
+	} else {
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					const pct = Math.min(100, Math.round((current / total) * 100));
+					statusFill.style.width = Math.max(6, pct) + '%';
+					statusPct.textContent = pct + '%';
+					statusText.textContent = pct >= 99 ? 'Membuka Gerbang Taman...' : (pct >= 55 ? 'Menyiapkan Karakter & Suara...' : 'Memuat Dunia Taman Emosi...');
+				}
+			},
+		}).then(hideStatus, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>
